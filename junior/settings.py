@@ -85,7 +85,8 @@ INSTALLED_APPS = (
     'devserver',
 
     # project apps
-    'teams'
+    'teams',
+    'game'
 )
 
 LOGGING = {
