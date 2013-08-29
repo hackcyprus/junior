@@ -35,7 +35,7 @@ USE_TZ = True
 MEDIA_ROOT = ''
 MEDIA_URL = ''
 
-STATIC_ROOT = here('static-collected')
+STATIC_ROOT = here('../static-collected')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     here('../static'),
