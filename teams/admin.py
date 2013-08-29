@@ -3,7 +3,7 @@ from .models import Team, Participant
 
 
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created')
+    list_display = ('name', 'token', 'created')
 
 
 class ParticipantAdmin(admin.ModelAdmin):

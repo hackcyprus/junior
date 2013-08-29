@@ -15,4 +15,4 @@ class TeamForm(forms.Form):
 
     def clean_participants(self):
         participants = self.cleaned_data['participants']
-        return map(unicode.strip, participants.split())
+        return [p for p in map(unicode.strip, participants.split()) if p]

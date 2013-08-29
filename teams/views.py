@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from .forms import TeamForm
 from .models import Team, Participant
 
+NINE_HOURS = 9 * 3600
 
 def create_team(request):
     if request.method == 'GET':
@@ -16,5 +17,8 @@ def create_team(request):
             for name in form.cleaned_data['participants']:
                 participant = Participant(name=name, team=team)
                 participant.save()
-            return redirect(reverse('team-created'))
+            response = redirect(reverse('team-created'))
+            response.set_signed_cookie('jhteam', team.token, max_age=NINE_HOURS)
+            return response
+
     return render(request, 'teams/new.html', {'form': form})
