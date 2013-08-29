@@ -106,10 +106,8 @@ LOGGING = {
     }
 }
 
-try:
+if os.environ.get('JUNIOR_ENV') == 'dev':
     from dev_settings import *
-except ImportError, exp:
-    pass
 
 try:
     from secrets import *
