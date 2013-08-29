@@ -18,7 +18,10 @@ DATABASES = {
     }
 }
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'ec2-54-216-5-240.eu-west-1.compute.amazonaws.com', # temporary
+    '.hackcyprus.com'
+]
 
 TIME_ZONE = 'Europe/Athens'
 

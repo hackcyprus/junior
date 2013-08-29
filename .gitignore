@@ -37,3 +37,4 @@ nosetests.xml
 secrets.py
 keys/
 .DS_Store
+juniordb
