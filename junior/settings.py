@@ -19,7 +19,6 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = [
-    'ec2-54-216-5-240.eu-west-1.compute.amazonaws.com', # temporary
     '.hackcyprus.com'
 ]
 
@@ -38,7 +37,9 @@ MEDIA_URL = ''
 
 STATIC_ROOT = here('static-collected')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = ()
+STATICFILES_DIRS = (
+    here('../static'),
+)
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -63,10 +64,11 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'junior.urls'
 
-# Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'junior.wsgi.application'
 
-TEMPLATE_DIRS = ()
+TEMPLATE_DIRS = (
+    here('../templates'),
+)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -81,8 +83,6 @@ INSTALLED_APPS = (
     # third-party apps
     'south',
     'devserver',
-
-    # project apps
 )
 
 LOGGING = {
