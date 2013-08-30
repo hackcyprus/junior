@@ -7,7 +7,7 @@ class TeamExtractionMiddleware(object):
 
     """
     def process_request(self, request):
-        team_token = request.COOKIES.get('jhteam')
+        team_token = request.get_signed_cookie('jhteam')
         if team_token:
             try:
                 team = Team.objects.get(token=team_token)
