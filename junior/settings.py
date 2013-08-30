@@ -1,9 +1,11 @@
 import os
 
+here = lambda path: os.path.join(os.path.realpath(os.path.dirname(__file__)), path)
+
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
-here = lambda path: os.path.join(os.path.realpath(os.path.dirname(__file__)), path)
+ENV = os.environ.get('JUNIOR_ENV', 'prod')
 
 ADMINS = (
     ('Alex Michael', 'alex@projectcel.com'),
@@ -51,6 +53,18 @@ SECRET_KEY = 'secret'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
+)
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.tz',
+    'django.contrib.messages.context_processors.messages',
+    'django.core.context_processors.request',
+    'junior.context_processors.expose_settings',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -114,7 +128,7 @@ LOGGING = {
     }
 }
 
-if os.environ.get('JUNIOR_ENV') == 'dev':
+if ENV == 'dev':
     from dev_settings import *
 
 try:
