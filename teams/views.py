@@ -29,7 +29,21 @@ def create_team(request):
                 participant = Participant(name=name, team=team)
                 participant.save()
             initialize_stages(team)
+            request.session['team_name'] = team.name
+            request.session['team_token'] = team.token
             response = redirect(reverse('team-created'))
             response.set_signed_cookie('jhteam', team.token, max_age=NINE_HOURS)
             return response
     return render(request, 'teams/new.html', {'form': form})
+
+
+def team_created_successfully(request):
+    context = {}
+    if 'team_name' in request.session:
+        context['team_name'] = request.session['team_name']
+        del request.session['team_name']
+    if 'team_token' in request.session:
+        context['team_token'] = request.session['team_token']
+        del request.session['team_token']
+    return render(request, 'teams/created.html', context)
+

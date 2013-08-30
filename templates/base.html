@@ -13,6 +13,9 @@
     <link rel="stylesheet" href='{% static "css/main.css" %}'>
   </head>
   <body>
+    <script type="text/javascript">
+      var __env__ = '{{ settings.ENV }}';
+    </script>
     <nav class="navbar navbar-default" role="navigation">
       <div class="navbar-header">
         <a class="navbar-brand" href='{% url "index" %}'>Junior Hackathon</a>
@@ -20,7 +23,14 @@
       <ul class="nav navbar-nav">
         <li><a href='{% url "create-team" %}'>Create Team</a></li>
         <li><a href='{% url "map" %}'>Map</a></li>
-        <li><a href=/game/leaderboard/">Leaderboard</a></li>
+        <li><a href="/game/leaderboard/">Leaderboard</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+      {% if request.team %}
+        <li><a>Team: <b>{{request.team}}</b></a></li>
+      {% else %}
+        <li><a>Anonymous Visitor</a></li>
+      {% endif %}
       </ul>
     </nav>
     {% block content %}

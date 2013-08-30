@@ -1,9 +1,8 @@
 from django.conf.urls import patterns, url
-from django.views.generic import TemplateView
-from .views import create_team
+from .views import create_team, team_created_successfully
 
 
 urlpatterns = patterns('teams',
     url(r'new/$', create_team, name='create-team'),
-    url(r'created/$', TemplateView.as_view(template_name='teams/created.html'), name='team-created')
+    url(r'created/$', team_created_successfully, name='team-created')
 )
