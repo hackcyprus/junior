@@ -7,7 +7,7 @@ class Problem(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField()
     description = models.TextField()
-    io_description = models.TextField()
+    io_description = models.TextField('I/O Description')
     sample_in = models.TextField()
     sample_out = models.TextField()
     multiplier = models.FloatField(default=1.0)

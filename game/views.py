@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.functional import curry
 
-from .models import Stage
+from .models import Stage, Problem
 from teams.models import Team
 
 
@@ -41,16 +41,24 @@ def team_token_required(fn):
 
 
 def view_map(request):
-    teams, bootstrap = {}, {}
+    problems, teams, bootstrap = [], [], {}
+    for problem in Problem.objects.all().order_by('order'):
+        problems.append({
+            'id': problem.id,
+            'name': problem.name,
+            'order': problem.order
+        })
     for team in Team.objects.all():
-        teams[team.id] = {
+        teams.append({
+            'id': team.id,
             'name': team.name,
-            'latest_problem': team.latest_stage.problem.order,
+            'position': team.latest_stage.problem.order,
             'points': team.total_points
-        }
+        })
+    bootstrap['problems'] = problems
     bootstrap['teams'] = teams
     if request.team:
-        bootstrap['team_stages'] = [
+        bootstrap['stages'] = [
             stage.to_dict() for stage in Stage.objects.filter(team=request.team)
         ]
     return render(request, 'game/map.html', {'bootstrap': dumps(bootstrap)})
