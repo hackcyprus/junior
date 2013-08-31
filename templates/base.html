@@ -26,11 +26,11 @@
         <li><a href="/game/leaderboard/">Leaderboard</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-      {% if request.team %}
-        <li><a>Team: <b>{{request.team}}</b></a></li>
-      {% else %}
-        <li><a>Anonymous Visitor</a></li>
-      {% endif %}
+        {% if request.team %}
+          <li><a>Team: <b>{{request.team}}</b></a></li>
+        {% else %}
+          <li><a>Anonymous Visitor</a></li>
+        {% endif %}
       </ul>
     </nav>
     {% block content %}
