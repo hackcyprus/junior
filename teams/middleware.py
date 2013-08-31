@@ -13,4 +13,4 @@ class TeamExtractionMiddleware(object):
                 team = Team.objects.get(token=team_token)
                 request.team = team
         except (Team.DoesNotExist, KeyError):
-            pass
+            request.team = None
