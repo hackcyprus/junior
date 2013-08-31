@@ -2,24 +2,37 @@
     width: 500px;
 }
 
-.container .exercise {
-    width: 600px;
+.problem .description {
+    margin-bottom: 25px;
 }
 
-#map .position {
+#map .thing {
     padding: 5px;
     text-align: center;
     margin: 5px;
     display: inline-block;
+}
+
+#map .position {
     background-color: #eee;
     border: 1px solid #ddd;
 }
 
 #map .team {
-    padding: 5px;
-    text-align: center;
-    margin: 5px;
-    display: inline-block;
     background-color: #FFF8AC;
     border: 1px solid #D4C83D;
+}
+
+#map .stage.locked {
+    background-color: #FFA0A0;
+    border: 1px solid #B45858;
+}
+
+#map .stage.unlocked {
+    background-color: #B0EC99;
+    border: 1px solid #73AF5B;
+}
+
+#map .stage.unlocked:hover {
+    cursor: pointer;
 }

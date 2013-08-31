@@ -12,16 +12,18 @@ require.config({
         backbone: [
             '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min',
             '../vendor/backbone'
-        ]
+        ],
+        modal: '../vendor/bootstrap-modal'
     },
     shim: {
-        'backbone': {
+        backbone: {
             deps: ['underscore', 'jquery'],
             exports: 'Backbone'
         },
-        'underscore': {
+        underscore: {
             exports: '_'
-        }
+        },
+        modal: ['jquery']
     }
 });
 
@@ -31,7 +33,7 @@ if (__env__ == 'dev') {
     });
 }
 
-require(['app'], function(app) {
+require(['jquery', 'modal', 'app'], function($, _, app) {
     app.initialize();
     console.log('initialized');
 });

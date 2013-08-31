@@ -11,4 +11,8 @@ define(function(require, exports) {
     exports.PositionCollection = Backbone.Collection.extend({
         model: models.Position
     });
+
+    exports.StageCollection = Backbone.Collection.extend({
+        model: models.Stage
+    });
 });

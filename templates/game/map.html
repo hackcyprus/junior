@@ -2,7 +2,28 @@
 {% load staticfiles %}
 
 {% block content %}
+    <!-- game map -->
     <div id="map"></div>
+
+    <!-- modal problem viewer -->
+    <div id="problem-viewer" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 class="modal-title"></h3>
+          </div>
+          <div class="modal-body">
+            Loading..
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- scripts -->
     <script data-main='{% static "javascript/game/main" %}' src='{% static "javascript/vendor/require.js" %}'></script>
     <script type="text/javascript">
         var BOOTSTRAP = {{bootstrap|safe}};

@@ -5,4 +5,5 @@ define(function(require, exports) {
 
     exports.Team = Backbone.Model.extend({});
     exports.Position = Backbone.Model.extend({});
+    exports.Stage = Backbone.Model.extend({});
 });

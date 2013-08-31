@@ -3,14 +3,19 @@ define(function(require, exports) {
 
     var backbone = require('backbone')
       , views = require('views')
-      , collections = require('collections');
+      , collections = require('collections')
+      , global = require('global');
 
     var teams = new collections.TeamCollection()
       , positions = new collections.PositionCollection()
+      , stages = new collections.StageCollection()
       , map = new views.MapView()
+
+    global.positions = positions;
 
     var bootstrap = function() {
         teams.reset(BOOTSTRAP.teams);
+        stages.reset(BOOTSTRAP.stages);
         // TODO: correlate this to pre-defined map positions
         positions.reset(BOOTSTRAP.problems);
     };
@@ -26,6 +31,11 @@ define(function(require, exports) {
         // draw teams
         map.addLayer(new views.TeamLayer({
             collection: teams
+        }));
+
+        // draw stages
+        map.addLayer(new views.StageLayer({
+            collection: stages
         }));
 
         map.render();

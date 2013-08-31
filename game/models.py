@@ -38,6 +38,7 @@ class Stage(models.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'locked': self.locked,
             'unlocked_on': self.unlocked_on,
             'points_earned': self.points_earned,

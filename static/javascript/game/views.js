@@ -1,40 +1,73 @@
 define(function(require, exports) {
     'use strict';
 
-    var Backbone = require('backbone');
+    var Backbone = require('backbone')
+      , $ = require('jquery')
+      , _ = require('underscore')
+      , global = require('global');
+
+    var problemTemplate = require('text!partials/problem.html')
+      , problemViewer;
+
+    var ProblemViewer = Backbone.View.extend({
+        el: '#problem-viewer',
+
+        template: _.template(problemTemplate),
+
+        open: function(stage) {
+            var self = this
+              , problem = global.positions.get(stage.get('problem'))
+              , title = '#' + problem.get('order') + ' ' + problem.get('name');
+
+            self.$el.find('.modal-title').html(title);
+            self.$el.modal('show');
+
+            $.get('/game/stage/' + stage.get('id'), function(data) {
+                self.$el.find('.modal-body').html(self.template(data));
+            }, 'json');
+        }
+    });
+
+    problemViewer = new ProblemViewer();
 
     var PositionView = Backbone.View.extend({
-        className: 'position',
-
-        events: {
-            'click': 'openProblem'
-        },
-
+        className: 'thing position',
         render: function() {
             this.$el.html(this.model.get('name'));
             return this;
-        },
-
-        openProblem: function() {
-
         }
     });
 
     var TeamView = Backbone.View.extend({
-        className: 'team',
+        className: 'thing team',
         render: function() {
             this.$el.html(this.model.get('name') + ' <b>(' + this.model.get('position') + ')</b>');
             return this;
         }
     });
 
-    var Layer = Backbone.View.extend({
-        className: 'layer'
+    var StageView = Backbone.View.extend({
+        className: 'thing stage',
+
+        events: {
+            'click': 'openProblem'
+        },
+
+        render: function() {
+            var klass = this.model.get('locked') ? 'locked' : 'unlocked';
+            this.$el.html('#' + this.model.get('problem')).addClass(klass);
+            return this;
+        },
+
+        openProblem: function() {
+            if (this.model.get('locked')) return;
+            problemViewer.open(this.model);
+        }
     });
 
-    exports.PositionLayer = Layer.extend({
-
-        childView: PositionView,
+    var Layer = Backbone.View.extend({
+        childView: null,
+        className: 'layer',
 
         initialize: function() {
             this.children = [];
@@ -46,15 +79,23 @@ define(function(require, exports) {
         },
 
         addChild: function(child) {
+            if (this.childView == null) throw new Error('childView is undefined!');
             var view = new this.childView({model: child});
             this.children.push(view);
             this.$el.append(view.render().$el);
         }
-
     });
 
-    exports.TeamLayer = exports.PositionLayer.extend({
+    exports.PositionLayer = Layer.extend({
+        childView: PositionView
+    });
+
+    exports.TeamLayer = Layer.extend({
         childView: TeamView
+    });
+
+    exports.StageLayer = Layer.extend({
+        childView: StageView
     });
 
     exports.MapView = Backbone.View.extend({

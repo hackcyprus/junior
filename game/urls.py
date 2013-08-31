@@ -1,3 +1,4 @@
+
 from django.conf.urls import patterns, url
 from .views import view_map, view_stage
 
