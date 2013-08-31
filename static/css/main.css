@@ -1,3 +1,7 @@
 .container.small {
     width: 500px;
 }
+
+.container .exercise {
+    width: 600px;
+}
