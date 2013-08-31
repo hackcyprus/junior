@@ -33,4 +33,5 @@ if (__env__ == 'dev') {
 
 require(['app'], function(app) {
     app.initialize();
+    console.log('initialized');
 });

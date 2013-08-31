@@ -5,3 +5,21 @@
 .container .exercise {
     width: 600px;
 }
+
+#map .position {
+    padding: 5px;
+    text-align: center;
+    margin: 5px;
+    display: inline-block;
+    background-color: #eee;
+    border: 1px solid #ddd;
+}
+
+#map .team {
+    padding: 5px;
+    text-align: center;
+    margin: 5px;
+    display: inline-block;
+    background-color: #FFF8AC;
+    border: 1px solid #D4C83D;
+}
