@@ -6,7 +6,10 @@ from teams.models import Team
 class Problem(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField()
-    html_template = models.CharField(max_length=100)
+    description = models.TextField()
+    io_description = models.TextField()
+    sample_in = models.TextField()
+    sample_out = models.TextField()
     multiplier = models.FloatField(default=1.0)
     base_points = models.IntegerField(default=300)
     created = models.DateTimeField(default=now)
@@ -21,8 +24,8 @@ class Stage(models.Model):
     """
     unlocked_on = models.DateTimeField(null=True, blank=True)
     points_earned = models.FloatField(default=0)
-    problem = models.ForeignKey(Problem)
-    team = models.ForeignKey(Team)
+    problem = models.ForeignKey(Problem, related_name='problems')
+    team = models.ForeignKey(Team, related_name='stages')
     created = models.DateTimeField(default=now)
 
     @property
@@ -32,6 +35,15 @@ class Stage(models.Model):
     def unlock(self, save=True):
         self.unlocked_on = now()
         if save: self.save()
+
+    def to_dict(self):
+        return {
+            'locked': self.locked,
+            'unlocked_on': self.unlocked_on,
+            'points_earned': self.points_earned,
+            'problem': self.problem_id,
+            'team': self.team_id
+        }
 
 
 class Attempt(models.Model):

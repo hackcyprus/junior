@@ -3,7 +3,7 @@ from .models import Problem, Stage, Attempt
 
 
 class ProblemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'order', 'html_template', 'base_points', 'multiplier')
+    list_display = ('name', 'order', 'base_points', 'multiplier')
 
 
 class StageAdmin(admin.ModelAdmin):
