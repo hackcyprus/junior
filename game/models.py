@@ -3,6 +3,23 @@ from django.utils.timezone import now
 from teams.models import Team
 
 
+class Game(models.Model):
+    name = models.CharField(max_length=100)
+    duration = models.IntegerField()
+    started_on = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def started(self):
+        return self.started_on is not None
+
+    def start(self, save=True):
+        self.started_on = now()
+        if save: self.save()
+
+    def __unicode__(self):
+        return self.name
+
+
 class Problem(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField()
@@ -12,7 +29,9 @@ class Problem(models.Model):
     sample_out = models.TextField()
     multiplier = models.FloatField(default=1.0)
     base_points = models.IntegerField(default=300)
-    test_file = models.FileField(upload_to='testfiles', null=True, blank=True)
+    in_file = models.FileField(upload_to='testfiles', null=True, blank=True)
+    out_file = models.FileField(upload_to='testfiles', null=True, blank=True)
+    game = models.ForeignKey(Game, null=True, blank=True)
     created = models.DateTimeField(default=now)
 
     def __unicode__(self):

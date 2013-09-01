@@ -5,8 +5,10 @@ from functools import wraps
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.functional import curry
+from django.utils.timezone import now
 
 from .models import Stage, Problem, Attempt
+from .checker import Checker
 from teams.models import Team
 
 
@@ -107,7 +109,7 @@ def download_test_file(request, stage_id):
     # for our purposes.
     stage = Stage.objects.get(pk=int(stage_id))
     filename = "problem{}.in".format(stage.problem.order)
-    response = HttpResponse(stage.problem.test_file.read(), content_type='text/plain')
+    response = HttpResponse(stage.problem.in_file.read(), content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
     return response
 
@@ -123,20 +125,31 @@ def skip_stage(request, stage_id):
 def submit_stage(request, stage_id):
     # TODO: this method is a stub for now.
     stage = Stage.objects.get(pk=int(stage_id))
-    stage.points_earned = 300
-    # TODO: change this to a `state` instead.
-    stage.solved = True
-    stage.save()
+    problem = stage.problem
+    game = stage.problem.game
+    content = {}
 
-    attempt = Attempt(correct=True, stage=stage)
+    if not game.started:
+        return JsonResponse(content='The game has not started yet.', status=403)
+
+    checker = Checker()
+    correct = checker.check_solution()
+    content['correct'] = correct
+
+    if correct:
+        minutes_from_start = (now() - game.started_on).seconds / 60
+        points = int(max(0, (problem.base_points * problem.multiplier) - minutes_from_start))
+        content['points'] = points
+        stage.points_earned = points
+        # TODO: change this to a `state` instead.
+        stage.solved = True
+        stage.save()
+
+    attempt = Attempt(correct=correct, stage=stage)
     attempt.save()
 
     next_stage = stage.next
     if next_stage:
         next_stage.unlock()
 
-    content = {
-        'correct': True,
-        'points': 300
-    }
     return JsonResponse(content=content)
