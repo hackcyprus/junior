@@ -138,23 +138,21 @@ def submit_stage(request, stage_id):
 
     checker = Checker()
     correct = checker.check_solution()
-    content['correct'] = correct
-
+    state = SOLVED_CORRECTLY if correct else TRIED_BUT_FAILED
     if correct:
         minutes_from_start = (now() - game.started_on).seconds / 60
         points = int(max(0, (problem.base_points * problem.multiplier) - minutes_from_start))
         content['points'] = points
         stage.points_earned = points
-        stage.state = SOLVED_CORRECTLY
-    else:
-        stage.state = TRIED_BUT_FAILED
+    stage.state = state
+    content['state'] = state
     stage.save()
 
     attempt = Attempt(correct=correct, stage=stage)
     attempt.save()
 
     next_stage = stage.next
-    if next_stage:
+    if next_stage and next_stage.locked:
         next_stage.unlock()
 
     return JsonResponse(content=content)

@@ -34,15 +34,28 @@ define(function(require, exports) {
             this.$el.modal('show');
 
             var self = this;
-            $.get('/game/stage/' + this.stage.get('id'), function(data) {
+            $.get('/game/stage/' + this.stage.get('id') + '/', function(data) {
                 self.$el.find('.modal-body').html(self.template(data));
             }, 'json');
         },
 
         submitSolution: function() {
-            $.post('/game/stage/' + this.stage.get('id') + '/submit/', function(data) {
-                console.log(data);
-            }, 'json');
+            var self = this;
+            $.post('/game/stage/' + this.stage.get('id') + '/submit/')
+            .done(function(resp) {
+                var nextStage = global.stages.after(self.stage)
+                  , team = global.teams.get(self.stage.get('team'));
+
+                self.stage.set({state: resp.state, points_earned: resp.points});
+
+                if (nextStage != null && nextStage.get('locked')) {
+                    nextStage.set('locked', false);
+                    team.set('position', nextStage.getProblemOrder());
+                }
+            })
+            .fail(function(err) {
+                // TODO
+            });
         }
     });
 
@@ -58,6 +71,11 @@ define(function(require, exports) {
 
     var TeamView = Backbone.View.extend({
         className: 'thing team',
+
+        initialize: function() {
+            this.listenTo(this.model, 'change', this.render);
+        },
+
         render: function() {
             this.$el.html(this.model.get('name') + ' <b>(' + this.model.get('position') + ')</b>');
             return this;
@@ -71,9 +89,16 @@ define(function(require, exports) {
             'click': 'openProblem'
         },
 
+        initialize: function() {
+            this.listenTo(this.model, 'change', this.render);
+        },
+
         render: function() {
-            var klass = this.model.get('locked') ? 'locked' : 'unlocked';
-            this.$el.html('#' + this.model.get('problem')).addClass(klass);
+            var klass = this.model.get('locked') ? 'locked' : 'unlocked'
+              , html = '#' + this.model.get('problem')
+                        + ' (' + this.model.getHumanState()
+                        + ', ' + this.model.get('points_earned') + ')';
+            this.$el.html(html).addClass(klass);
             return this;
         },
 

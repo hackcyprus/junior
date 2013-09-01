@@ -13,6 +13,8 @@ define(function(require, exports) {
       , map = new views.MapView()
 
     global.positions = positions;
+    global.stages = stages;
+    global.teams = teams;
 
     var bootstrap = function() {
         teams.reset(BOOTSTRAP.teams);

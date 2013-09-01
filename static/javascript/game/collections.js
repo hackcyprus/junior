@@ -13,6 +13,13 @@ define(function(require, exports) {
     });
 
     exports.StageCollection = Backbone.Collection.extend({
-        model: models.Stage
+        model: models.Stage,
+
+        after: function(stage){
+            var order = stage.getProblemOrder();
+            return this.find(function(s) {
+                return s.getProblemOrder() == order + 1;
+            });
+        }
     });
 });
