@@ -7,7 +7,11 @@ from django.shortcuts import render
 from django.utils.functional import curry
 from django.utils.timezone import now
 
-from .models import Stage, Problem, Attempt
+from .models import (Stage,
+                     Problem,
+                     Attempt,
+                     SOLVED_CORRECTLY,
+                     TRIED_BUT_FAILED)
 from .checker import Checker
 from teams.models import Team
 
@@ -141,9 +145,10 @@ def submit_stage(request, stage_id):
         points = int(max(0, (problem.base_points * problem.multiplier) - minutes_from_start))
         content['points'] = points
         stage.points_earned = points
-        # TODO: change this to a `state` instead.
-        stage.solved = True
-        stage.save()
+        stage.state = SOLVED_CORRECTLY
+    else:
+        stage.state = TRIED_BUT_FAILED
+    stage.save()
 
     attempt = Attempt(correct=correct, stage=stage)
     attempt.save()

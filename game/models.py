@@ -3,6 +3,13 @@ from django.utils.timezone import now
 from teams.models import Team
 
 
+# Stage states
+NOT_TRIED = 0
+TRIED_BUT_FAILED = 1
+SOLVED_CORRECTLY = 2
+SKIPPED = 3
+
+
 class Game(models.Model):
     name = models.CharField(max_length=100)
     duration = models.IntegerField()
@@ -43,7 +50,12 @@ class Stage(models.Model):
     team. A stage N is normally locked, until the team solves N-1 correctly.
     """
     unlocked_on = models.DateTimeField(null=True, blank=True)
-    solved = models.BooleanField(default=False)
+    state = models.IntegerField(default=NOT_TRIED, choices=[
+        (NOT_TRIED, 'Not Tried'),
+        (TRIED_BUT_FAILED, 'Tried But Failed'),
+        (SOLVED_CORRECTLY, 'Solved Correctly'),
+        (SKIPPED, 'Skipped')
+    ])
     points_earned = models.FloatField(default=0)
     problem = models.ForeignKey(Problem, related_name='problems')
     team = models.ForeignKey(Team, related_name='stages')
@@ -69,6 +81,7 @@ class Stage(models.Model):
         return {
             'id': self.id,
             'locked': self.locked,
+            'state': self.state,
             'unlocked_on': self.unlocked_on,
             'points_earned': self.points_earned,
             'problem': self.problem_id,

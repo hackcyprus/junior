@@ -18,7 +18,7 @@ class ProblemAdmin(admin.ModelAdmin):
 
 
 class StageAdmin(admin.ModelAdmin):
-    list_display = ('problem', 'team', 'unlocked_on', 'points_earned', 'solved')
+    list_display = ('problem', 'team', 'unlocked_on', 'points_earned', 'state')
 
 
 class AttemptAdmin(admin.ModelAdmin):
