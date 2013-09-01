@@ -24,6 +24,7 @@ class Stage(models.Model):
     team. A stage N is normally locked, until the team solves N-1 correctly.
     """
     unlocked_on = models.DateTimeField(null=True, blank=True)
+    solved = models.BooleanField(default=False)
     points_earned = models.FloatField(default=0)
     problem = models.ForeignKey(Problem, related_name='problems')
     team = models.ForeignKey(Team, related_name='stages')
@@ -32,6 +33,14 @@ class Stage(models.Model):
     @property
     def locked(self):
         return self.unlocked_on is None
+
+    @property
+    def next(self):
+        order = self.problem.order
+        try:
+            return self.team.stages.get(problem__order=order + 1)
+        except Stage.DoesNotExist:
+            return None
 
     def unlock(self, save=True):
         self.unlocked_on = now()

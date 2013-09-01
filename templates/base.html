@@ -36,5 +36,6 @@
     {% block content %}
       <p>hello world!</p>
     {% endblock %}
+    <input id='csrf-token' value='{{ csrf_token }}' type='hidden'/>
   </body>
 </html>

@@ -2,6 +2,7 @@ define(function(require, exports) {
     'use strict';
 
     var backbone = require('backbone')
+      , $ = require('jquery')
       , views = require('views')
       , collections = require('collections')
       , global = require('global');
@@ -20,8 +21,17 @@ define(function(require, exports) {
         positions.reset(BOOTSTRAP.problems);
     };
 
+    var configureCSRF = function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRFToken': $('#csrf-token').val()
+            }
+        });
+    };
+
     exports.initialize = function() {
         bootstrap();
+        configureCSRF();
 
         // draw all positions
         map.addLayer(new views.PositionLayer({

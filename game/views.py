@@ -1,11 +1,12 @@
 import json
 from datetime import datetime
+from functools import wraps
 
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.functional import curry
 
-from .models import Stage, Problem
+from .models import Stage, Problem, Attempt
 from teams.models import Team
 
 
@@ -28,15 +29,33 @@ def team_token_required(fn):
     a team property, meaning that a team has been registered on this browser.
 
     """
-    def wrapper(*args, **kwargs):
-        request = args[0]
+    @wraps(fn)
+    def wrapper(request, *args, **kwargs):
         if hasattr(request, 'team') and request.team:
-            return fn(*args, **kwargs)
+            return fn(request, *args, **kwargs)
         else:
             return JsonResponse(
                 content='You need to register a team to perform this action.',
                 status=403
             )
+    return wrapper
+
+
+def valid_stage(fn):
+    """Decorator for checking that the requested stage exists and is unlocked
+    for the currently active team. Expects the `request` object to have a `team`
+    property.
+
+    """
+    @wraps(fn)
+    def wrapper(request, stage_id, *args, **kwargs):
+        try:
+            stage = Stage.objects.get(pk=int(stage_id), team=request.team)
+            if stage.locked:
+                return JsonResponse(content='This stage is locked.', status=403)
+            return fn(request, stage_id, *args, **kwargs)
+        except Stage.DoesNotExist:
+            return JsonResponse(content='Stage not found.', status=404)
     return wrapper
 
 
@@ -65,47 +84,59 @@ def view_map(request):
 
 
 @team_token_required
+@valid_stage
 def view_stage(request, stage_id):
-    try:
-        stage = Stage.objects.get(pk=int(stage_id), team=request.team)
-        if stage.locked:
-            return JsonResponse(content='This stage is locked.', status=403)
-        problem = stage.problem
-        content = {
-            'name': problem.name,
-            'order': problem.order,
-            'description': problem.description,
-            'io_description': problem.io_description,
-            'multiplier': problem.multiplier,
-            'sample_in': problem.sample_in,
-            'sample_out': problem.sample_out
-        }
-        return JsonResponse(content=content)
-    except Stage.DoesNotExist:
-        return JsonResponse(content='Stage not found.', status=404)
+    stage = Stage.objects.get(pk=int(stage_id))
+    problem = stage.problem
+    content = {
+        'name': problem.name,
+        'order': problem.order,
+        'description': problem.description,
+        'io_description': problem.io_description,
+        'multiplier': problem.multiplier,
+        'sample_in': problem.sample_in,
+        'sample_out': problem.sample_out
+    }
+    return JsonResponse(content=content)
 
 
 @team_token_required
+@valid_stage
 def download_test_file(request, stage_id):
     # NOTE: this is an inefficient way of serving media files, but it will do
     # for our purposes.
-    try:
-        stage = Stage.objects.get(pk=int(stage_id), team=request.team)
-        if stage.locked:
-            return JsonResponse(content='This stage is locked.', status=403)
-        filename = "problem{}.in".format(stage.problem.order)
-        response = HttpResponse(stage.problem.test_file.read(), content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-        return response
-    except Stage.DoesNotExist:
-        return JsonResponse(content='Stage not found.', status=404)
+    stage = Stage.objects.get(pk=int(stage_id))
+    filename = "problem{}.in".format(stage.problem.order)
+    response = HttpResponse(stage.problem.test_file.read(), content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
 
 
 @team_token_required
-def skip_stage(request):
+@valid_stage
+def skip_stage(request, stage_id):
     pass
 
 
 @team_token_required
-def submit_stage(request):
-    pass
+@valid_stage
+def submit_stage(request, stage_id):
+    # TODO: this method is a stub for now.
+    stage = Stage.objects.get(pk=int(stage_id))
+    stage.points_earned = 300
+    # TODO: change this to a `state` instead.
+    stage.solved = True
+    stage.save()
+
+    attempt = Attempt(correct=True, stage=stage)
+    attempt.save()
+
+    next_stage = stage.next
+    if next_stage:
+        next_stage.unlock()
+
+    content = {
+        'correct': True,
+        'points': 300
+    }
+    return JsonResponse(content=content)

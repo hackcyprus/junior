@@ -2,6 +2,10 @@
     width: 500px;
 }
 
+.modal-body {
+    min-height: 430px;
+}
+
 .problem .description {
     margin-bottom: 25px;
 }

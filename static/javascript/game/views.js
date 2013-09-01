@@ -14,17 +14,34 @@ define(function(require, exports) {
 
         template: _.template(problemTemplate),
 
-        open: function(stage) {
-            var self = this
-              , problem = global.positions.get(stage.get('problem'))
-              , title = '#' + problem.get('order') + ' ' + problem.get('name')
-              , downloadUrl = '/game/stage/' + stage.get('id') + '/download/';
-            self.$el.find('.modal-title').html(title);
-            self.$el.find('#download-test-file').attr('href', downloadUrl);
-            self.$el.modal('show');
+        events: {
+            'click #submit-solution ': 'submitSolution'
+        },
 
-            $.get('/game/stage/' + stage.get('id'), function(data) {
+        initialize: function() {
+            this.stage = null;
+        },
+
+        open: function(stage) {
+            this.stage = stage;
+
+            var problem = global.positions.get(this.stage.get('problem'))
+              , title = '#' + problem.get('order') + ' ' + problem.get('name')
+              , downloadUrl = '/game/stage/' + this.stage.get('id') + '/download/';
+
+            this.$el.find('.modal-title').html(title);
+            this.$el.find('#download-test-file').attr('href', downloadUrl);
+            this.$el.modal('show');
+
+            var self = this;
+            $.get('/game/stage/' + this.stage.get('id'), function(data) {
                 self.$el.find('.modal-body').html(self.template(data));
+            }, 'json');
+        },
+
+        submitSolution: function() {
+            $.post('/game/stage/' + this.stage.get('id') + '/submit/', function(data) {
+                console.log(data);
             }, 'json');
         }
     });

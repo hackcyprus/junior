@@ -10,7 +10,7 @@ class Team(models.Model):
 
     @property
     def latest_stage(self):
-        return self.stages.filter(unlocked_on__isnull=False).order_by('problem__order')[0]
+        return self.stages.filter(unlocked_on__isnull=False).order_by('-problem__order')[0]
 
     @property
     def total_points(self):
