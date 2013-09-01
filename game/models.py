@@ -12,6 +12,7 @@ class Problem(models.Model):
     sample_out = models.TextField()
     multiplier = models.FloatField(default=1.0)
     base_points = models.IntegerField(default=300)
+    test_file = models.FileField(upload_to='testfiles', null=True, blank=True)
     created = models.DateTimeField(default=now)
 
     def __unicode__(self):

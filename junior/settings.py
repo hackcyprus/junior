@@ -34,7 +34,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-MEDIA_ROOT = ''
+MEDIA_ROOT = '/var/junior/media/'
 MEDIA_URL = ''
 
 STATIC_ROOT = here('../static-collected')

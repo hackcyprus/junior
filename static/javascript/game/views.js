@@ -17,9 +17,10 @@ define(function(require, exports) {
         open: function(stage) {
             var self = this
               , problem = global.positions.get(stage.get('problem'))
-              , title = '#' + problem.get('order') + ' ' + problem.get('name');
-
+              , title = '#' + problem.get('order') + ' ' + problem.get('name')
+              , downloadUrl = '/game/stage/' + stage.get('id') + '/download/';
             self.$el.find('.modal-title').html(title);
+            self.$el.find('#download-test-file').attr('href', downloadUrl);
             self.$el.modal('show');
 
             $.get('/game/stage/' + stage.get('id'), function(data) {

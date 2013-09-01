@@ -19,7 +19,7 @@ class JsonResponse(HttpResponse):
         super(JsonResponse, self).__init__(
             content,
             status=status,
-            content_type='application/javascript; charset=utf8'
+            content_type='application/json; charset=utf8'
         )
 
 
@@ -81,6 +81,22 @@ def view_stage(request, stage_id):
             'sample_out': problem.sample_out
         }
         return JsonResponse(content=content)
+    except Stage.DoesNotExist:
+        return JsonResponse(content='Stage not found.', status=404)
+
+
+@team_token_required
+def download_test_file(request, stage_id):
+    # NOTE: this is an inefficient way of serving media files, but it will do
+    # for our purposes.
+    try:
+        stage = Stage.objects.get(pk=int(stage_id), team=request.team)
+        if stage.locked:
+            return JsonResponse(content='This stage is locked.', status=403)
+        filename = "problem{}.in".format(stage.problem.order)
+        response = HttpResponse(stage.problem.test_file.read(), content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+        return response
     except Stage.DoesNotExist:
         return JsonResponse(content='Stage not found.', status=404)
 
