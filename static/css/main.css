@@ -1,5 +1,5 @@
 .container.small {
-    width: 500px;
+    width: 580px;
 }
 
 .modal-body {
@@ -39,4 +39,30 @@
 
 #map .stage.unlocked:hover {
     cursor: pointer;
+}
+
+#leaderboard {
+    width: 100%;
+}
+
+#leaderboard td, #leaderboard th  {
+    text-align: center;
+    padding: 10px 5px;
+}
+
+#leaderboard td.name, #leaderboard th.name {
+    text-align: left;
+}
+
+#leaderboard td.correct, #leaderboard th.correct {
+    background-color: #E9F8DA;
+}
+
+#leaderboard td.wrong, #leaderboard th.wrong {
+    background-color: #F7DADA;
+}
+
+#leaderboard td.total-points, #leaderboard th.total-points {
+    background-color: #DAF4F7;
+    font-weight: bold;
 }

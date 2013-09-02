@@ -3,13 +3,6 @@ from django.utils.timezone import now
 from teams.models import Team
 
 
-# Stage states
-NOT_TRIED = 0
-TRIED_BUT_FAILED = 1
-SOLVED_CORRECTLY = 2
-SKIPPED = 3
-
-
 class Game(models.Model):
     name = models.CharField(max_length=100)
     duration = models.IntegerField()
@@ -49,6 +42,12 @@ class Stage(models.Model):
     """A stage is a place in the game. Each problem represents a stage for each
     team. A stage N is normally locked, until the team solves N-1 correctly.
     """
+    # Stage states
+    NOT_TRIED = 0
+    TRIED_BUT_FAILED = 1
+    SOLVED_CORRECTLY = 2
+    SKIPPED = 3
+
     unlocked_on = models.DateTimeField(null=True, blank=True)
     state = models.IntegerField(default=NOT_TRIED, choices=[
         (NOT_TRIED, 'Not Tried'),

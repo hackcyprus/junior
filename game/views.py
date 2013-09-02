@@ -1,4 +1,5 @@
 import json
+import operator
 from datetime import datetime
 from functools import wraps
 
@@ -7,11 +8,7 @@ from django.shortcuts import render
 from django.utils.functional import curry
 from django.utils.timezone import now
 
-from .models import (Stage,
-                     Problem,
-                     Attempt,
-                     SOLVED_CORRECTLY,
-                     TRIED_BUT_FAILED)
+from .models import Stage, Problem, Attempt
 from .checker import Checker
 from teams.models import Team
 
@@ -138,7 +135,7 @@ def submit_stage(request, stage_id):
 
     checker = Checker()
     correct = checker.check_solution()
-    state = SOLVED_CORRECTLY if correct else TRIED_BUT_FAILED
+    state = Stage.SOLVED_CORRECTLY if correct else Stage.TRIED_BUT_FAILED
     if correct:
         minutes_from_start = (now() - game.started_on).seconds / 60
         points = int(max(0, (problem.base_points * problem.multiplier) - minutes_from_start))
@@ -156,3 +153,13 @@ def submit_stage(request, stage_id):
         next_stage.unlock()
 
     return JsonResponse(content=content)
+
+
+def leaderboard(request):
+    board = []
+    for team in Team.objects.all():
+        stats = team.attempt_stats()
+        board.append((team.name, sum(stats)) + stats + (team.total_points,))
+    return render(request, 'game/leaderboard.html', {
+        'board': sorted(board, reverse=True, key=operator.itemgetter(6))
+    })

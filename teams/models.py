@@ -1,4 +1,6 @@
 import uuid
+from collections import defaultdict
+
 from django.db import models
 from django.utils.timezone import now
 
@@ -18,6 +20,12 @@ class Team(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def attempt_stats(self):
+        counts = defaultdict(int)
+        for stage in self.stages.all():
+            counts[stage.state] += 1
+        return tuple(counts[i] for i in range(4))
 
     def to_dict(self):
         return {

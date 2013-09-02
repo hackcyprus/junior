@@ -23,7 +23,7 @@
       <ul class="nav navbar-nav">
         <li><a href='{% url "create-team" %}'>Create Team</a></li>
         <li><a href='{% url "map" %}'>Map</a></li>
-        <li><a href="/game/leaderboard/">Leaderboard</a></li>
+        <li><a href='{% url "leaderboard" %}'>Leaderboard</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         {% if request.team %}
