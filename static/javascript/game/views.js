@@ -12,6 +12,8 @@ define(function(require, exports) {
       , stageViewTemplate = require('text!partials/stage-view.html')
       , problemViewer;
 
+    var eventbus = _.extend({}, Backbone.Events);
+
     var ProblemViewer = Backbone.View.extend({
         el: '#problem-viewer',
 
@@ -50,11 +52,10 @@ define(function(require, exports) {
             $.post('/game/stage/' + this.stage.get('id') + '/submit/')
             .done(function(resp) {
                 self.stage.set({state: resp.state, points_earned: resp.points});
-                self.deferred.resolve(resp);
+                eventbus.trigger('stage:solved', self.stage);
             })
             .fail(function(err) {
                 // TODO: handle err
-                self.deferred.reject(err);
             });
         }
     });
@@ -72,37 +73,28 @@ define(function(require, exports) {
 
         initialize: function() {
             this.stages = this.options.stages;
-            this.listenTo(this.options.teams, 'change', function(team) {
-                console.log(team);
-            });
+            this.teamContainerView = null;
             this.listenTo(this.options.stage, 'change:locked', this.renderLockState);
+
+            eventbus.on('team:move', this.updateTeams, this);
         },
 
         render: function() {
-            _.bindAll(this, 'renderLockState', 'unlockNextStage');
+            _.bindAll(this, 'renderLockState');
 
             var html = this.template(this.model.toJSON())
               , stageView = new StageView({model: this.options.stage})
-              , teamContainerView = new TeamContainerView({teams: this.options.teams})
               , $el = this.$el;
+
+            this.teamContainerView = new TeamContainerView({teams: this.options.teams});
 
             $el.html(html);
             $el.find('.stage').html(stageView.render().$el);
-            $el.find('.teams').append(teamContainerView.render().$el);
+            $el.find('.teams').html(this.teamContainerView.render().$el);
 
             this.renderLockState(this.options.stage);
 
             return this;
-        },
-
-        unlockNextStage: function(resp) {
-            var stage = this.options.stage
-              , nextStage = global.stages.after(stage)
-              , team = global.teams.get(stage.get('team'));
-            if (nextStage != null && nextStage.get('locked')) {
-                nextStage.set('locked', false);
-                team.set('position', nextStage.get('problem_order'));
-            }
         },
 
         renderLockState: function(stage) {
@@ -111,10 +103,18 @@ define(function(require, exports) {
 
         openProblem: function() {
             if (this.model.get('locked')) return;
-            var promise = problemViewer.open(this.model, this.options.stage);
-            promise.done(this.unlockNextStage).fail(function() {
-                // TODO
-            });
+            problemViewer.open(this.model, this.options.stage);
+        },
+
+        updateTeams: function(team, oldPos, newPos) {
+            if (this.model.get('order') == newPos) {
+                this.teamContainerView.addTeam(team);
+            } else {
+                var existing = this.options.teams.find(function(t) {
+                    return t.previousAttributes().position == oldPos;
+                });
+                if (existing != null) this.teamContainerView.removeTeam(team);
+            }
         }
     });
 
@@ -125,30 +125,63 @@ define(function(require, exports) {
         },
 
         render: function() {
+            _.bindAll(this, 'addTeam', 'removeTeam');
+
             var self = this;
+
             if (this.teams.size() == 0) {
-                this.$el.html('<span>Nobody is here.</span>');
+                this.renderEmpty();
             } else {
-                this.teams.each(function(team) {
-                    var view = new TeamView({model: team});
-                    self.children.push(view);
-                    self.$el.append(view.render().$el);
-                });
+                this.teams.each(this.addTeam);
             }
             return this;
+        },
+
+        renderEmpty: function() {
+            this.$el.html('<span>Nobody is here.</span>');
+            return this;
+        },
+
+        clean: function() {
+            this.$el.empty();
+            return this;
+        },
+
+        removeTeam: function(team) {
+            var self = this
+              , view = _.find(this.children, function(t) {
+                    return t.model.id == team.id;
+                });
+
+            view.$el.addClass('animated fadeOutDown');
+            window.setTimeout(function() {
+                view.remove();
+                if (self.teams.size() == 0) self.renderEmpty();
+            }, 1300);
+
+            this.teams.remove(team);
+        },
+
+        addTeam: function(team) {
+            if (this.teams.size() == 0) this.clean();
+            var view = new TeamView({model: team});
+            this.children.push(view);
+            view.render().$el.addClass('animated fadeInUp');
+            this.$el.append(view.render().$el);
+            this.teams.add(team);
         }
     });
 
     var TeamView = Backbone.View.extend({
-        className: 'team',
+        className: 'team animated fadeInUp',
         tagName: 'span',
 
-        initialize: function() {
-            this.listenTo(this.model, 'change', this.render);
-        },
-
         render: function() {
+            var self = this;
             this.$el.html(this.model.get('name'));
+            window.setTimeout(function() {
+                self.$el.removeClass('animated fadeInUp');
+            }, 1300);
             return this;
         }
     });
@@ -180,6 +213,19 @@ define(function(require, exports) {
             this.problems = this.options.problems;
             this.stages = this.options.stages;
             this.teams = this.options.teams;
+
+            eventbus.on('stage:solved', this.unlockNextStage, this)
+        },
+
+        unlockNextStage: function(stage) {
+            var nextStage = this.stages.after(stage)
+              , team = this.teams.get(stage.get('team'))
+              , oldPos = team.get('position');
+            if (nextStage != null && nextStage.get('locked')) {
+                nextStage.set('locked', false);
+                team.set('position', nextStage.get('problem_order'));
+                eventbus.trigger('team:move', team, oldPos, team.get('position'));
+            }
         },
 
         render: function() {
@@ -197,7 +243,6 @@ define(function(require, exports) {
                         stage: stage,
                         teams: new collections.TeamCollection(teamsAtProblem)
                     });
-
                 self.children.push(pv);
                 self.$el.append(pv.render().$el);
             });
