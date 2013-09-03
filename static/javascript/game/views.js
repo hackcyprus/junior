@@ -10,6 +10,7 @@ define(function(require, exports) {
     var problemTemplate = require('text!partials/problem.html')
       , problemViewTemplate = require('text!partials/problem-view.html')
       , stageViewTemplate = require('text!partials/stage-view.html')
+      , teamViewTemplate = require('text!partials/team-view.html')
       , problemViewer;
 
     var eventbus = _.extend({}, Backbone.Events);
@@ -173,12 +174,30 @@ define(function(require, exports) {
     });
 
     var TeamView = Backbone.View.extend({
-        className: 'team animated fadeInUp',
-        tagName: 'span',
+        className: 'team animated fadeInUp clearfix',
+        tagName: 'div',
+        template: _.template(teamViewTemplate),
+
+        darker: function(hex) {
+            var r = parseInt(hex.substring(1, 3), 16)
+              , g = parseInt(hex.substring(3, 5), 16)
+              , b = parseInt(hex.substring(5, 7), 16)
+              , mult = 7/8;
+            return _.map([r, g, b], function(t) {
+                return parseInt(t * mult);
+            });
+        },
 
         render: function() {
-            var self = this;
-            this.$el.html(this.model.get('name'));
+            var self = this
+              , bg = this.model.colour()
+              , dbg = this.darker(bg);
+            var html = this.template({
+                team: this.model.toJSON(),
+                you: __teamId__ == this.model.get('id'),
+                dbg: 'rgb(' + dbg[0] + ',' + dbg[1] + ',' + dbg[2] + ')'
+            });
+            this.$el.css('background-color', bg).html(html);
             window.setTimeout(function() {
                 self.$el.removeClass('animated fadeInUp');
             }, 1300);

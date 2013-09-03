@@ -16,6 +16,7 @@
   <body>
     <script type="text/javascript">
       var __env__ = '{{ settings.ENV }}';
+      {% if request.team %}var __teamId__ = '{{request.team.id}}';{% endif %}
     </script>
     <nav class="navbar navbar-default" role="navigation">
       <div class="navbar-header">
