@@ -2,6 +2,11 @@
     width: 580px;
 }
 
+.container.xlarge {
+    width: 1020px;
+    max-width: 1020px;
+}
+
 .modal-body {
     min-height: 430px;
 }
@@ -10,35 +15,92 @@
     margin-bottom: 25px;
 }
 
-#map .thing {
-    padding: 5px;
-    text-align: center;
-    margin: 5px;
+.problem {
+    position: relative;
+    width: 280px;
+    margin: 0px 25px 50px 25px;
     display: inline-block;
+    height: 200px;
 }
 
-#map .position {
+.problem.locked:hover {
+    pointer-events: none;
+}
+
+.problem .lock {
+    z-index: 40;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 40px;
+    background: url(/static/images/striped_lens_trans.png);
+    display: none;
+    line-height: 270px;
+}
+
+.problem .lock span {
+    display: block;
+    width: 40px;
+    margin: 80px auto 0 auto;
+}
+
+.problem.locked .lock {
+    display: block;
+}
+
+.problem .header {
+    height: 30px;
+    line-height: 30px;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.problem .teams {
+    height: 115px;
+}
+
+.problem .footer {
+    height: 30px;
+}
+
+.problem .footer .stage {
+    width: 120px;
+    height: 30px;
+    line-height: 30px;
+    font-size: 1.25em;
+}
+
+.problem .footer .stage .points {
+    margin-right: 10px;
+}
+
+.problem .footer .stage .points span {
+    color: #aaa;
+    font-weight: normal;
+    font-size: 0.75em;
+}
+
+.problem .footer .stage .state.ok {
+    color: #78C968;
+}
+
+.problem .footer .stage .state.wrong {
+    color: #C96969;
+}
+
+.problem .teams .team {
+    padding: 4px;
     background-color: #eee;
-    border: 1px solid #ddd;
-}
-
-#map .team {
-    background-color: #FFF8AC;
-    border: 1px solid #D4C83D;
-}
-
-#map .stage.locked {
-    background-color: #FFA0A0;
-    border: 1px solid #B45858;
-}
-
-#map .stage.unlocked {
-    background-color: #B0EC99;
-    border: 1px solid #73AF5B;
-}
-
-#map .stage.unlocked:hover {
-    cursor: pointer;
+    margin: 0px 3px 6px 0px;
+    display: inline-block;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    font-size: 0.875em;
+    font-weight: bold;
 }
 
 #leaderboard {

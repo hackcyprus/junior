@@ -8,17 +8,17 @@ define(function(require, exports) {
         model: models.Team
     });
 
-    exports.PositionCollection = Backbone.Collection.extend({
-        model: models.Position
+    exports.ProblemCollection = Backbone.Collection.extend({
+        model: models.Problem
     });
 
     exports.StageCollection = Backbone.Collection.extend({
         model: models.Stage,
 
         after: function(stage){
-            var order = stage.getProblemOrder();
+            var order = stage.get('problem_order');
             return this.find(function(s) {
-                return s.getProblemOrder() == order + 1;
+                return s.get('problem_order') == order + 1;
             });
         }
     });

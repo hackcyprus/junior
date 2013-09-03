@@ -77,13 +77,15 @@ class Stage(models.Model):
         if save: self.save()
 
     def to_dict(self):
+        problem = self.problem
         return {
             'id': self.id,
             'locked': self.locked,
             'state': self.state,
             'unlocked_on': self.unlocked_on,
             'points_earned': self.points_earned,
-            'problem': self.problem_id,
+            'problem': problem.id,
+            'problem_order': problem.order,
             'team': self.team_id
         }
 

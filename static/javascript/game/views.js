@@ -4,9 +4,12 @@ define(function(require, exports) {
     var Backbone = require('backbone')
       , $ = require('jquery')
       , _ = require('underscore')
+      , collections = require('collections')
       , global = require('global');
 
     var problemTemplate = require('text!partials/problem.html')
+      , problemViewTemplate = require('text!partials/problem-view.html')
+      , stageViewTemplate = require('text!partials/stage-view.html')
       , problemViewer;
 
     var ProblemViewer = Backbone.View.extend({
@@ -20,152 +23,184 @@ define(function(require, exports) {
 
         initialize: function() {
             this.stage = null;
+            this.deferred = null;
         },
 
-        open: function(stage) {
+        open: function(problem, stage) {
             this.stage = stage;
+            this.deferred = $.Deferred();
 
-            var problem = global.positions.get(this.stage.get('problem'))
-              , title = '#' + problem.get('order') + ' ' + problem.get('name')
-              , downloadUrl = '/game/stage/' + this.stage.get('id') + '/download/';
+            var title = '#' + problem.get('order') + ' ' + problem.get('name')
+              , downloadUrl = '/game/stage/' + stage.get('id') + '/download/';
 
             this.$el.find('.modal-title').html(title);
             this.$el.find('#download-test-file').attr('href', downloadUrl);
             this.$el.modal('show');
 
             var self = this;
-            $.get('/game/stage/' + this.stage.get('id') + '/', function(data) {
+            $.get('/game/stage/' + stage.get('id') + '/', function(data) {
                 self.$el.find('.modal-body').html(self.template(data));
             }, 'json');
+
+            return this.deferred.promise();
         },
 
         submitSolution: function() {
             var self = this;
             $.post('/game/stage/' + this.stage.get('id') + '/submit/')
             .done(function(resp) {
-                var nextStage = global.stages.after(self.stage)
-                  , team = global.teams.get(self.stage.get('team'));
-
                 self.stage.set({state: resp.state, points_earned: resp.points});
-
-                if (nextStage != null && nextStage.get('locked')) {
-                    nextStage.set('locked', false);
-                    team.set('position', nextStage.getProblemOrder());
-                }
+                self.deferred.resolve(resp);
             })
             .fail(function(err) {
-                // TODO
+                // TODO: handle err
+                self.deferred.reject(err);
             });
         }
     });
 
     problemViewer = new ProblemViewer();
 
-    var PositionView = Backbone.View.extend({
-        className: 'thing position',
+    var ProblemView = Backbone.View.extend({
+        className: 'problem',
+
+        events: {
+            'click .footer button': 'openProblem'
+        },
+
+        template: _.template(problemViewTemplate),
+
+        initialize: function() {
+            this.stages = this.options.stages;
+            this.listenTo(this.options.teams, 'change', function(team) {
+                console.log(team);
+            });
+            this.listenTo(this.options.stage, 'change:locked', this.renderLockState);
+        },
+
+        render: function() {
+            _.bindAll(this, 'renderLockState', 'unlockNextStage');
+
+            var html = this.template(this.model.toJSON())
+              , stageView = new StageView({model: this.options.stage})
+              , teamContainerView = new TeamContainerView({teams: this.options.teams})
+              , $el = this.$el;
+
+            $el.html(html);
+            $el.find('.stage').html(stageView.render().$el);
+            $el.find('.teams').append(teamContainerView.render().$el);
+
+            this.renderLockState(this.options.stage);
+
+            return this;
+        },
+
+        unlockNextStage: function(resp) {
+            var stage = this.options.stage
+              , nextStage = global.stages.after(stage)
+              , team = global.teams.get(stage.get('team'));
+            if (nextStage != null && nextStage.get('locked')) {
+                nextStage.set('locked', false);
+                team.set('position', nextStage.get('problem_order'));
+            }
+        },
+
+        renderLockState: function(stage) {
+            stage.get('locked') ? this.$el.addClass('locked') : this.$el.removeClass('locked');
+        },
+
+        openProblem: function() {
+            if (this.model.get('locked')) return;
+            var promise = problemViewer.open(this.model, this.options.stage);
+            promise.done(this.unlockNextStage).fail(function() {
+                // TODO
+            });
+        }
+    });
+
+    var TeamContainerView = Backbone.View.extend({
+        initialize: function() {
+            this.children = [];
+            this.teams = this.options.teams;
+        },
+
+        render: function() {
+            var self = this;
+            if (this.teams.size() == 0) {
+                this.$el.html('<span>Nobody is here.</span>');
+            } else {
+                this.teams.each(function(team) {
+                    var view = new TeamView({model: team});
+                    self.children.push(view);
+                    self.$el.append(view.render().$el);
+                });
+            }
+            return this;
+        }
+    });
+
+    var TeamView = Backbone.View.extend({
+        className: 'team',
+        tagName: 'span',
+
+        initialize: function() {
+            this.listenTo(this.model, 'change', this.render);
+        },
+
         render: function() {
             this.$el.html(this.model.get('name'));
             return this;
         }
     });
 
-    var TeamView = Backbone.View.extend({
-        className: 'thing team',
-
-        initialize: function() {
-            this.listenTo(this.model, 'change', this.render);
-        },
-
-        render: function() {
-            this.$el.html(this.model.get('name') + ' <b>(' + this.model.get('position') + ')</b>');
-            return this;
-        }
-    });
-
     var StageView = Backbone.View.extend({
-        className: 'thing stage',
-
-        events: {
-            'click': 'openProblem'
-        },
+        template: _.template(stageViewTemplate),
 
         initialize: function() {
             this.listenTo(this.model, 'change', this.render);
         },
 
         render: function() {
-            var klass = this.model.get('locked') ? 'locked' : 'unlocked'
-              , html = '#' + this.model.get('problem')
-                        + ' (' + this.model.getHumanState()
-                        + ', ' + this.model.get('points_earned') + ')';
-            this.$el.html(html).addClass(klass);
+            var html = this.template({
+                glyph: this.model.glyph(),
+                klass: this.model.get('state') == 1 ? 'wrong' : 'ok',
+                stage: this.model.toJSON()
+            });
+            this.$el.html(html);
             return this;
-        },
-
-        openProblem: function() {
-            if (this.model.get('locked')) return;
-            problemViewer.open(this.model);
         }
     });
 
-    var Layer = Backbone.View.extend({
-        childView: null,
-        className: 'layer',
+    exports.GameView = Backbone.View.extend({
+        el: '#game',
+        className: 'game',
 
         initialize: function() {
             this.children = [];
+            this.problems = this.options.problems;
+            this.stages = this.options.stages;
+            this.teams = this.options.teams;
         },
 
         render: function() {
-            this.collection.each(this.addChild, this);
-            return this;
-        },
-
-        addChild: function(child) {
-            if (this.childView == null) throw new Error('childView is undefined!');
-            var view = new this.childView({model: child});
-            this.children.push(view);
-            this.$el.append(view.render().$el);
-        }
-    });
-
-    exports.PositionLayer = Layer.extend({
-        childView: PositionView
-    });
-
-    exports.TeamLayer = Layer.extend({
-        childView: TeamView
-    });
-
-    exports.StageLayer = Layer.extend({
-        childView: StageView
-    });
-
-    exports.MapView = Backbone.View.extend({
-        el: '#map',
-
-        initialize: function() {
-            this.layers = [];
-            this.zIndex = 1;
-        },
-
-        render: function() {
-            this.$el.empty();
-            return this.renderLayers();
-        },
-
-        renderLayers: function() {
             var self = this;
-            _.each(this.layers, function(layer) {
-                self.$el.append(layer.render().$el);
-            });
-            return this;
-        },
+            this.problems.each(function(problem) {
+                var order = problem.get('order')
+                  , teamsAtProblem = self.teams.filter(function(team) {
+                        return team.get('position') == order;
+                    })
+                  , stage = self.stages.find(function(stage) {
+                        return stage.get('problem_order') == order;
+                    })
+                  , pv = new ProblemView({
+                        model: problem,
+                        stage: stage,
+                        teams: new collections.TeamCollection(teamsAtProblem)
+                    });
 
-        addLayer: function(layer) {
-            layer.$el.css('zIndex', this.zIndex);
-            this.layers.push(layer);
-            this.zIndex += 1;
+                self.children.push(pv);
+                self.$el.append(pv.render().$el);
+            });
             return this;
         }
     });

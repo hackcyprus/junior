@@ -8,19 +8,17 @@ define(function(require, exports) {
       , global = require('global');
 
     var teams = new collections.TeamCollection()
-      , positions = new collections.PositionCollection()
-      , stages = new collections.StageCollection()
-      , map = new views.MapView()
+      , problems = new collections.ProblemCollection()
+      , stages = new collections.StageCollection();
 
-    global.positions = positions;
+    global.problems = problems;
     global.stages = stages;
     global.teams = teams;
 
     var bootstrap = function() {
         teams.reset(BOOTSTRAP.teams);
         stages.reset(BOOTSTRAP.stages);
-        // TODO: correlate this to pre-defined map positions
-        positions.reset(BOOTSTRAP.problems);
+        problems.reset(BOOTSTRAP.problems);
     };
 
     var configureCSRF = function() {
@@ -34,22 +32,11 @@ define(function(require, exports) {
     exports.initialize = function() {
         bootstrap();
         configureCSRF();
-
-        // draw all positions
-        map.addLayer(new views.PositionLayer({
-            collection: positions
-        }));
-
-        // draw teams
-        map.addLayer(new views.TeamLayer({
-            collection: teams
-        }));
-
-        // draw stages
-        map.addLayer(new views.StageLayer({
-            collection: stages
-        }));
-
-        map.render();
+        var game = new views.GameView({
+            problems: global.problems,
+            teams: global.teams,
+            stages: global.stages
+        });
+        game.render();
     };
 });

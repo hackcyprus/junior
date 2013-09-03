@@ -1,0 +1,8 @@
+<div class="state pull-right <%= klass %>">
+    <span class="glyphicon glyphicon-<%= glyph %>"></span>
+</div>
+<% if (stage.state == 2) { %>
+  <div class="points pull-right">
+    <b><%= stage.points_earned %> </b><span>points</span>
+  </div>
+<% } %>
