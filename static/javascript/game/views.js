@@ -348,6 +348,7 @@ define(function(require, exports) {
 
         render: function() {
             var self = this;
+            this.$el.empty();
             this.problems.each(function(problem) {
                 var order = problem.get('order')
                   , teamsAtProblem = self.teams.filter(function(team) {

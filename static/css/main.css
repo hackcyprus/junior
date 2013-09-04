@@ -17,6 +17,15 @@
     margin-top: 5px;
 }
 
+#new-team-form .alert {
+    padding: 5px;
+    margin-bottom: 7px;
+}
+
+#new-team-form .alert ul {
+    margin: 0;
+}
+
 .problem-modal .description {
     margin-bottom: 15px;
 }
