@@ -17,6 +17,10 @@
     margin-top: 5px;
 }
 
+.welcome {
+    text-align: center;
+}
+
 #new-team-form .alert {
     padding: 5px;
     margin-bottom: 7px;

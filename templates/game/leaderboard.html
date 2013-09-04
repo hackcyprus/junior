@@ -12,7 +12,6 @@
         <th>Not Tried</th>
         <th class="correct">Correct</th>
         <th class="wrong">Wrong</th>
-        <th>Skipped</th>
         <th class="total-points">Total points</th>
       </tr>
     {% for name, total_attempts, not_tried, wrong, correct, skipped, points in board %}
@@ -22,7 +21,6 @@
           <td>{{ not_tried }}</td>
           <td class="correct">{{ correct }}</td>
           <td class="wrong">{{ wrong }}</td>
-          <td>{{ skipped }}</td>
           <td class="total-points">{{ points }}</td>
       </tr>
     {% endfor %}
