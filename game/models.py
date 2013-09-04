@@ -23,7 +23,8 @@ class Game(models.Model):
 class Problem(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField()
-    description = models.TextField()
+    pdf_gr = models.FileField(upload_to='pdfs', null=True, blank=True)
+    pdf_en = models.FileField(upload_to='pdfs', null=True, blank=True)
     io_description = models.TextField('I/O Description')
     sample_in = models.TextField()
     sample_out = models.TextField()

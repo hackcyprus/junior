@@ -3,7 +3,7 @@ import operator
 from datetime import datetime
 from functools import wraps
 
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render
 from django.utils.functional import curry
 from django.utils.timezone import now
@@ -79,11 +79,10 @@ def view_stage(request, stage_id):
     stage = Stage.objects.get(pk=int(stage_id))
     problem = stage.problem
     content = {
+        'stage_id': stage.id,
         'name': problem.name,
         'order': problem.order,
-        'description': problem.description,
         'io_description': problem.io_description,
-        'multiplier': problem.multiplier,
         'sample_in': problem.sample_in,
         'sample_out': problem.sample_out
     }
@@ -92,13 +91,30 @@ def view_stage(request, stage_id):
 
 @team_token_required
 @valid_stage
-def download_test_file(request, stage_id):
+def download_description(request, stage_id, lang):
     # NOTE: this is an inefficient way of serving media files, but it will do
     # for our purposes.
     stage = Stage.objects.get(pk=int(stage_id))
-    filename = "problem{}.in".format(stage.problem.order)
-    response = HttpResponse(stage.problem.in_file.read(), content_type='text/plain')
+    problem = stage.problem
+    pdf = problem.pdf_gr if lang == 'gr' else problem.pdf_en
+    filename = "problem{}_{}.pdf".format(problem.order, lang)
+    response = HttpResponse(pdf.read(), content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    pdf.close()
+    return response
+
+
+@team_token_required
+@valid_stage
+def download_test_file(request, stage_id):
+    # NOTE: Same as above.
+    stage = Stage.objects.get(pk=int(stage_id))
+    problem = stage.problem
+    in_file = problem.in_file
+    filename = "problem{}.in".format(problem.order)
+    response = HttpResponse(in_file.read(), content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    in_file.close()
     return response
 
 
