@@ -104,6 +104,10 @@ INSTALLED_APPS = (
     'game'
 )
 
+PUSHER_APP_ID = '53340'
+PUSHER_KEY = 'pusher-key'
+PUSHER_SECRET = 'pusher-secret'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -145,3 +149,7 @@ try:
     MIDDLEWARE_CLASSES += LOCAL_MIDDLEWARE_CLASSES
 except:
     pass
+
+# initialize pusher
+from lib import sync
+sync.connect()

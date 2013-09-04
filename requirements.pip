@@ -6,6 +6,7 @@ argparse==1.2.1
 django-devserver==0.6.2
 gunicorn==18.0
 paramiko==1.11.0
+pusher==0.8
 pycrypto==2.6
 pytz==2013b
 wsgiref==0.1.2

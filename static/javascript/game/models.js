@@ -16,14 +16,6 @@ define(function(require, exports) {
     exports.Team = Backbone.Model.extend({
         colour: function() {
             return teamColours[this.id % teamColours.length];
-        },
-
-        updatePoints: function() {
-            var points = 0;
-            global.stages.each(function(stage) {
-                points += stage.get('points_earned');
-            });
-            this.set('points', points);
         }
     });
 

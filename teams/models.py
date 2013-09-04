@@ -29,8 +29,10 @@ class Team(models.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'name': self.name,
-            'token': self.token
+            'position': self.latest_stage.problem.order,
+            'points': self.total_points
         }
 
 

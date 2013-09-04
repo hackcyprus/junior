@@ -4,6 +4,7 @@ define(function(require, exports) {
     var Backbone = require('backbone')
       , $ = require('jquery')
       , _ = require('underscore')
+      , Pusher = require('pusher')
       , collections = require('collections')
       , global = require('global');
 
@@ -14,6 +15,38 @@ define(function(require, exports) {
       , problemViewer;
 
     var eventbus = _.extend({}, Backbone.Events);
+
+    var pusher = new Pusher(__pusherKey__);
+    var channel = pusher.subscribe('updates');
+
+    channel.bind('submission:start', function(data) {
+        if (data.team_id == __teamId__) return;
+        eventbus.trigger('submission:start', data.team_id);
+    });
+
+    channel.bind('submission:finish', function(data) {
+        if (data.team_id == __teamId__) return;
+        var team = global.teams.get(data.team_id)
+          , oldPos = team.get('position')
+          , newPos = data.new_position;
+
+        eventbus.trigger('submission:finish', data.team_id, data.team_points);
+
+        if (data.state == 2 && oldPos && newPos) {
+            team.set('position', newPos);
+            eventbus.trigger('team:move', team.id, oldPos, newPos);
+        }
+    });
+
+    channel.bind('team:new', function(data) {
+        if (data.id == __teamId__) return;
+        global.teams.add(data);
+        eventbus.trigger('team:move', data.id, -1, data.position);
+    });
+
+    channel.bind('team:move', function(data) {
+        eventbus.trigger('team:move', data.team_id, data.old_pos, data.new_pos);
+    });
 
     var ProblemViewer = Backbone.View.extend({
         el: '#problem-viewer',
@@ -69,19 +102,19 @@ define(function(require, exports) {
             // evaluate solution
             $.post('/game/stage/' + this.stage.get('id') + '/submit/', {solution: $solution.val()})
             .done(function(resp) {
+                var teamId = self.stage.get('team');
+
                 // trigger UI updates
-                self.stage.set({state: resp.state, points_earned: resp.points});
+                self.stage.set({state: resp.state, points_earned: resp.stage_points});
 
                 if (resp.state == 1) {
-                    // wrong
                     $alert.html('Your solution failed some test cases.').addClass('alert-danger').show();
-                    eventbus.trigger('submission:wrong', self.stage.get('team'));
                 } else if (resp.state == 2) {
-                    // correct
                     $alert.html('Correct!').addClass('alert-success').show();
-                    eventbus.trigger('submission:correct', self.stage.get('team'));
-                    eventbus.trigger('stage:next', self.stage);
                 }
+
+                eventbus.trigger('submission:finish', teamId, resp.team_points);
+                if (resp.state == 2) eventbus.trigger('stage:next', self.stage);
             })
             .fail(function(err) {
                 // TODO
@@ -107,9 +140,11 @@ define(function(require, exports) {
         initialize: function() {
             this.stages = this.options.stages;
             this.teamContainerView = null;
+
             this.listenTo(this.options.stage, 'change:locked', this.renderLockState);
 
             eventbus.on('team:move', this.updateTeams, this);
+            eventbus.on('team:new', this.updateTeams, this);
         },
 
         render: function() {
@@ -139,14 +174,14 @@ define(function(require, exports) {
             problemViewer.open(this.model, this.options.stage);
         },
 
-        updateTeams: function(team, oldPos, newPos) {
+        updateTeams: function(teamId, oldPos, newPos) {
             if (this.model.get('order') == newPos) {
-                this.teamContainerView.addTeam(team);
+                this.teamContainerView.addTeam(global.teams.get(teamId));
             } else {
                 var existing = this.options.teams.find(function(t) {
                     return t.previousAttributes().position == oldPos;
                 });
-                if (existing != null) this.teamContainerView.removeTeam(team);
+                if (existing != null) this.teamContainerView.removeTeam(existing);
             }
         }
     });
@@ -211,10 +246,10 @@ define(function(require, exports) {
         template: _.template(teamViewTemplate),
 
         initialize: function() {
+            this.listenTo(this.model, 'change:points', this.renderContent);
             eventbus.on({
                 'submission:start': this.onSubmissionStart,
-                'submission:correct': this.onSubmissionResult,
-                'submission:wrong': this.onSubmissionResult
+                'submission:finish': this.onSubmissionFinish,
             }, this);
         },
 
@@ -223,10 +258,9 @@ define(function(require, exports) {
             this.flash();
         },
 
-        onSubmissionResult: function(teamId) {
+        onSubmissionFinish: function(teamId, teamPoints) {
             if (teamId != this.model.id) return;
-            this.model.updatePoints();
-            this.render();
+            this.model.set('points', teamPoints);
             this.unflash();
         },
 
@@ -249,18 +283,23 @@ define(function(require, exports) {
         },
 
         render: function() {
-            var self = this
-              , bg = this.model.colour()
-              , dbg = this.darker(bg);
-            var html = this.template({
-                team: this.model.toJSON(),
-                you: __teamId__ == this.model.get('id'),
-                dbg: 'rgb(' + dbg[0] + ',' + dbg[1] + ',' + dbg[2] + ')'
-            });
-            this.$el.css('background-color', bg).html(html);
+            var self = this;
+            this.renderContent();
             window.setTimeout(function() {
                 self.$el.removeClass('animated fadeInUp');
             }, 1300);
+            return this;
+        },
+
+        renderContent: function() {
+            var bg = this.model.colour()
+              , dbg = this.darker(bg)
+              , html = this.template({
+                    team: this.model.toJSON(),
+                    you: __teamId__ == this.model.get('id'),
+                    dbg: 'rgb(' + dbg[0] + ',' + dbg[1] + ',' + dbg[2] + ')'
+                });
+            this.$el.css('background-color', bg).html(html);
             return this;
         }
     });

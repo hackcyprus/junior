@@ -13,6 +13,10 @@ require.config({
             '//cdnjs.cloudflare.com/ajax/libs/backbone.js/1.0.0/backbone-min',
             '../vendor/backbone'
         ],
+        pusher: [
+            '//js.pusher.com/2.1/pusher.min',
+            '../vendor/pusher'
+        ],
         modal: '../vendor/bootstrap-modal'
     },
     shim: {
@@ -22,6 +26,9 @@ require.config({
         },
         underscore: {
             exports: '_'
+        },
+        pusher: {
+            exports: 'Pusher'
         },
         modal: ['jquery']
     }

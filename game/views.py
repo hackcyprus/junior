@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.utils.functional import curry
 from django.utils.timezone import now
 
+from lib.sync import pusher
 from .models import Stage, Problem, Attempt
 from .checker import Checker
 from teams.models import Team
@@ -62,27 +63,13 @@ def valid_stage(fn):
     return wrapper
 
 
+@team_token_required
 def view_map(request):
-    problems, teams, bootstrap = [], [], {}
-    for problem in Problem.objects.all().order_by('order'):
-        problems.append({
-            'id': problem.id,
-            'name': problem.name,
-            'order': problem.order
-        })
-    for team in Team.objects.all():
-        teams.append({
-            'id': team.id,
-            'name': team.name,
-            'position': team.latest_stage.problem.order,
-            'points': team.total_points
-        })
-    bootstrap['problems'] = problems
-    bootstrap['teams'] = teams
-    if request.team:
-        bootstrap['stages'] = [
-            stage.to_dict() for stage in Stage.objects.filter(team=request.team)
-        ]
+    bootstrap = {
+        'problems': [p.to_dict() for p in Problem.objects.all()],
+        'teams': [t.to_dict() for t in Team.objects.all()],
+        'stages': [s.to_dict() for s in Stage.objects.filter(team=request.team)]
+    }
     return render(request, 'game/map.html', {'bootstrap': dumps(bootstrap)})
 
 
@@ -124,7 +111,6 @@ def skip_stage(request, stage_id):
 @team_token_required
 @valid_stage
 def submit_stage(request, stage_id):
-    # TODO: this method is a stub for now.
     stage = Stage.objects.get(pk=int(stage_id))
     problem = stage.problem
     game = stage.problem.game
@@ -132,6 +118,8 @@ def submit_stage(request, stage_id):
 
     if not game.started:
         return JsonResponse(content='The game has not started yet.', status=403)
+
+    pusher['updates'].trigger('submission:start', {'team_id': request.team.id})
 
     solution = request.POST.get('solution')
 
@@ -147,15 +135,26 @@ def submit_stage(request, stage_id):
     stage.state = state
     stage.save()
 
-    content['points'] = points
+    content['stage_points'] = points
+    content['team_points'] = request.team.total_points
     content['state'] = state
 
     attempt = Attempt(correct=correct, stage=stage, solution=solution)
     attempt.save()
 
     next_stage = stage.next
+    new_position = None
     if next_stage and next_stage.locked:
         next_stage.unlock()
+        new_position = next_stage.problem.order
+
+    pusher['updates'].trigger('submission:finish', {
+        'team_id': request.team.id,
+        'team_points': content['team_points'],
+        'problem_order': problem.order,
+        'new_position': new_position,
+        'state': content['state']
+    })
 
     return JsonResponse(content=content)
 

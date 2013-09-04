@@ -37,6 +37,13 @@ class Problem(models.Model):
     def __unicode__(self):
         return self.name
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'order': self.order
+        }
+
 
 class Stage(models.Model):
     """A stage is a place in the game. Each problem represents a stage for each

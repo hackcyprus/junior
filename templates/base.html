@@ -16,6 +16,7 @@
   <body>
     <script type="text/javascript">
       var __env__ = '{{ settings.ENV }}';
+      var __pusherKey__ = '{{settings.PUSHER_KEY}}';
       {% if request.team %}var __teamId__ = '{{request.team.id}}';{% endif %}
     </script>
     <nav class="navbar navbar-default" role="navigation">
@@ -24,7 +25,9 @@
       </div>
       <ul class="nav navbar-nav">
         <li><a href='{% url "create-team" %}'>Create Team</a></li>
-        <li><a href='{% url "game" %}'>Game</a></li>
+        {% if request.team %}
+          <li><a href='{% url "game" %}'>Game</a></li>
+        {% endif %}
         <li><a href='{% url "leaderboard" %}'>Leaderboard</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">

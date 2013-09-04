@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 
+from lib.sync import pusher
 from game.models import Problem, Stage
 from .forms import TeamForm
 from .models import Team, Participant
@@ -33,6 +34,7 @@ def create_team(request):
             request.session['team_token'] = team.token
             response = redirect(reverse('team-created'))
             response.set_signed_cookie('jhteam', team.token, max_age=NINE_HOURS)
+            pusher['updates'].trigger('team:new', team.to_dict())
             return response
     return render(request, 'teams/new.html', {'form': form})
 
