@@ -7,7 +7,7 @@ from .views import (view_map,
 
 
 urlpatterns = patterns('',
-    url(r'^map/$', view_map, name='map'),
+    url(r'^$', view_map, name='game'),
     url(r'^leaderboard/$', leaderboard, name='leaderboard'),
     url(r'^stage/(?P<stage_id>[0-9]+)/$', view_stage, name='view-stage'),
     url(r'^stage/(?P<stage_id>[0-9]+)/download/$', download_test_file, name='download-test-file'),

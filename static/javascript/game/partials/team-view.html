@@ -1,7 +1,4 @@
 <span class="team-name">
-    <% if (you) { %>
-        <span class="glyphicon glyphicon-star"></span>
-    <% } %>
-    <%= team.name %>
+    <% if (you) { %><span class="glyphicon glyphicon-star"></span><% } %> <%= team.name %>
 </span>
 <span class="team-points" style='background-color: <%= dbg %>'><%= team.points %></span>

@@ -94,6 +94,7 @@ class Attempt(models.Model):
     """An attempt to solve/pass a stage. Each attempt records the outcome and
     the error percentage for analytics.
     """
+    solution = models.TextField(null=True, blank=True)
     correct = models.BooleanField()
     stage = models.ForeignKey(Stage)
     created = models.DateTimeField(default=now)

@@ -3,23 +3,43 @@
 }
 
 .container.xlarge {
-    width: 1020px;
-    max-width: 1020px;
+    width: 1080px;
+    max-width: 1080px;
 }
 
 .modal-body {
     min-height: 430px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
-.problem .description {
-    margin-bottom: 25px;
+.modal-footer {
+    margin-top: 5px;
+}
+
+.problem-modal .description {
+    margin-bottom: 15px;
+}
+
+.problem-modal .description, .problem-modal .io {
+    margin-bottom: 15px;
+}
+
+.problem-modal .solution textarea {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.problem-modal .solution .alert {
+    padding: 10px;
+    margin-bottom: 0;
 }
 
 .problem {
     position: relative;
     width: 280px;
-    margin: 0px 25px 50px 25px;
-    display: inline-block;
+    margin: 0px 35px 50px 35px;
+    float: left;
     height: 230px;
 }
 

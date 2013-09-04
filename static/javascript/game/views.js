@@ -48,16 +48,48 @@ define(function(require, exports) {
             return this.deferred.promise();
         },
 
-        submitSolution: function() {
-            var self = this;
-            $.post('/game/stage/' + this.stage.get('id') + '/submit/')
+        submitSolution: function(e) {
+            var self = this
+              , $btn = $(e.target)
+              , prevHtml = $btn.html()
+              , $solution = this.$el.find('.solution textarea')
+              , $alert = this.$el.find('.solution .alert');
+
+            if ($solution.val() == '') return;
+
+            // hide the alert box
+            $alert.removeClass('alert-success alert-danger').hide();
+
+            // disable the textarea
+            $solution.prop('disabled', true).addClass('disabled');
+
+            // disable the submit button
+            $btn.prop('disabled', true).addClass('disabled').html('Submitting..');
+
+            // evaluate solution
+            $.post('/game/stage/' + this.stage.get('id') + '/submit/', {solution: $solution.val()})
             .done(function(resp) {
+                // trigger UI updates
                 self.stage.set({state: resp.state, points_earned: resp.points});
-                eventbus.trigger('stage:solved', self.stage);
+
+                if (resp.state == 1) {
+                    // wrong
+                    $alert.html('Your solution failed some test cases.').addClass('alert-danger').show();
+                    eventbus.trigger('submission:wrong', self.stage.get('team'));
+                } else if (resp.state == 2) {
+                    // correct
+                    $alert.html('Correct!').addClass('alert-success').show();
+                    eventbus.trigger('submission:correct', self.stage.get('team'));
+                    eventbus.trigger('stage:next', self.stage);
+                }
             })
             .fail(function(err) {
-                // TODO: handle err
-            });
+                // TODO
+            })
+            .always(function() {
+                $solution.prop('disabled', false).removeClass('disabled');
+                $btn.prop('disabled', false).removeClass('disabled').html(prevHtml);
+            })
         }
     });
 
@@ -178,6 +210,34 @@ define(function(require, exports) {
         tagName: 'div',
         template: _.template(teamViewTemplate),
 
+        initialize: function() {
+            eventbus.on({
+                'submission:start': this.onSubmissionStart,
+                'submission:correct': this.onSubmissionResult,
+                'submission:wrong': this.onSubmissionResult
+            }, this);
+        },
+
+        onSubmissionStart: function(teamId) {
+            if (teamId != this.model.id) return;
+            this.flash();
+        },
+
+        onSubmissionResult: function(teamId) {
+            if (teamId != this.model.id) return;
+            this.model.updatePoints();
+            this.render();
+            this.unflash();
+        },
+
+        flash: function() {
+            // TODO
+        },
+
+        unflash: function() {
+            // TODO
+        },
+
         darker: function(hex) {
             var r = parseInt(hex.substring(1, 3), 16)
               , g = parseInt(hex.substring(3, 5), 16)
@@ -233,7 +293,7 @@ define(function(require, exports) {
             this.stages = this.options.stages;
             this.teams = this.options.teams;
 
-            eventbus.on('stage:solved', this.unlockNextStage, this)
+            eventbus.on('stage:next', this.unlockNextStage, this)
         },
 
         unlockNextStage: function(stage) {

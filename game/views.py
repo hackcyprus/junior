@@ -133,19 +133,24 @@ def submit_stage(request, stage_id):
     if not game.started:
         return JsonResponse(content='The game has not started yet.', status=403)
 
-    checker = Checker()
-    correct = checker.check_solution()
+    solution = request.POST.get('solution')
+
+    checker = Checker(problem)
+    correct = checker.check_solution(solution)
     state = Stage.SOLVED_CORRECTLY if correct else Stage.TRIED_BUT_FAILED
     if correct:
         minutes_from_start = (now() - game.started_on).seconds / 60
         points = int(max(0, (problem.base_points * problem.multiplier) - minutes_from_start))
-        content['points'] = points
-        stage.points_earned = points
+    else:
+        points = 0
+    stage.points_earned = points
     stage.state = state
-    content['state'] = state
     stage.save()
 
-    attempt = Attempt(correct=correct, stage=stage)
+    content['points'] = points
+    content['state'] = state
+
+    attempt = Attempt(correct=correct, stage=stage, solution=solution)
     attempt.save()
 
     next_stage = stage.next
