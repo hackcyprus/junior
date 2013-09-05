@@ -160,7 +160,7 @@ def submit_stage(request, stage_id):
 
     next_stage = stage.next
     new_position = None
-    if next_stage and next_stage.locked:
+    if correct and next_stage and next_stage.locked:
         next_stage.unlock()
         new_position = next_stage.problem.order
 
